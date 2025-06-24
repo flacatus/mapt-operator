@@ -48,7 +48,7 @@ func newAdapter(ctx context.Context, client client.Client, kind *v1alpha1.Kind, 
 		client: client,
 		ctx:    ctx,
 		kind:   kind,
-		log:    logger, // <--- ASSIGN THE PASSED LOGGER
+		log:    logger,
 	}
 
 	kindAdapter.validations = []controller.ValidationFunction{}
@@ -79,7 +79,6 @@ func (a *adapter) finalizeKind() error {
 // external resources. Upon successful cleanup, it removes the finalizer, allowing Kubernetes to fully
 // delete the resource. If the cleanup fails, it returns an error to retry the operation.
 func (a *adapter) EnsureFinalizersAreCalled() (controller.OperationResult, error) {
-	// Check if the Kind resource is marked for deletion and continue processing other operations otherwise
 	if a.kind.GetDeletionTimestamp() == nil {
 		return controller.ContinueProcessing()
 	}
@@ -99,7 +98,6 @@ func (a *adapter) EnsureFinalizersAreCalled() (controller.OperationResult, error
 		}
 	}
 
-	// Requeue the Kind resource again so it gets deleted and other operations are not executed.
 	return controller.Requeue()
 }
 
@@ -129,13 +127,10 @@ func (a *adapter) EnsureFinalizerIsAdded() (controller.OperationResult, error) {
 // This approach ensures that the status is always patched with the latest state from the cluster.
 // It's a common pattern to avoid race conditions.
 func (a *adapter) patchStatus(mutator func(status *v1alpha1.KindStatus)) (controller.OperationResult, error) {
-	// Create a patch from the original Kind resource
 	patch := client.MergeFrom(a.kind.DeepCopy())
 
-	// Mutate the status using the provided function
 	mutator(&a.kind.Status)
 
-	// Automatically update the LastUpdateTime field
 	a.kind.Status.LastUpdateTime = &metav1.Time{Time: time.Now()}
 
 	// Patch the status subresource

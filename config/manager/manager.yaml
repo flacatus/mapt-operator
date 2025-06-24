@@ -85,6 +85,16 @@ spec:
             secretKeyRef:
               name: mapt-kind-secret
               key: secret-key
+        - name: PULUMI_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: mapt-kind-secret
+              key: pulumi-access-token
+        - name: PULUMI_CONFIG_PASSPHRASE
+          valueFrom:
+            secretKeyRef:
+              name: mapt-kind-secret
+              key: pulumi-config-passphrase
 
         imagePullPolicy: Always
         name: manager
