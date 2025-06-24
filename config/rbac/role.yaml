@@ -1,0 +1,40 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - mapt.redhat.com
+  resources:
+  - kinds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mapt.redhat.com
+  resources:
+  - kinds/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - mapt.redhat.com
+  resources:
+  - kinds/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
