@@ -286,6 +286,10 @@ spec:
                   Phase indicates the current lifecycle phase of the Kind cluster.
                   E.g., Pending, Provisioning, Ready, Deleting, Error.
                 type: string
+              provisionId:
+                description: ProvisionId is the id of the backend used by the Kind
+                  provisioning tool.
+                type: string
               provisionStartTime:
                 description: ProvisionStartTime records when the provisioning process
                   began.

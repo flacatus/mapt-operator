@@ -1,12 +1,13 @@
+---
 apiVersion: mapt.redhat.com/v1alpha1
 kind: Kind
 metadata:
-  name: kind-sample1
+  name: fla-kind
   labels:
     app.kubernetes.io/name: mapt-operator
     app.kubernetes.io/managed-by: kustomize
 spec:
-  identifier: devcluster1
+  identifier: devcluster3
 
   cloudConfig:
     provider: AWS
@@ -15,18 +16,19 @@ spec:
 
   machineConfig:
     architecture: x86_64
-    cpus: 8
-    memoryGiB: 32
+    cpus: 32
+    memoryGiB: 128
     nestedVirtualizationEnabled: false
     useSpotInstances: true
-    spotPriceIncreasePercentage: 15
+    spotPriceIncreasePercentage: 35
     tags:
-      env: dev
-      owner: team-x
+      env: local
+      owner: Flavius Lacatusu
+      email: flacatus@redhat.com
 
   kindClusterConfig:
-    kubernetesVersion: v1.29.2
+    kubernetesVersion: v1.32
 
   outputKubeconfigSecretName: kind-devcluster1-kubeconfig
   terminationPolicy:
-    deleteAfterSeconds: 86400  # 1 day
+    deleteAfterSeconds: 86400

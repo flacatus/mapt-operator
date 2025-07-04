@@ -21,6 +21,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// KindPhase represents the lifecycle phase of a Kind resource.
+type KindPhase string
+
+const (
+	KindPhasePending      KindPhase = "Pending"
+	KindPhaseProvisioning KindPhase = "Provisioning"
+	KindPhaseRunning      KindPhase = "Running"
+	KindPhaseFailed       KindPhase = "Failed"
+	KindPhaseDeleting     KindPhase = "Deleting"
+)
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -147,7 +158,7 @@ type KindStatus struct {
 	// Phase indicates the current lifecycle phase of the Kind cluster.
 	// E.g., Pending, Provisioning, Ready, Deleting, Error.
 	// +optional
-	Phase string `json:"phase,omitempty"`
+	Phase KindPhase `json:"phase,omitempty"`
 
 	// Message provides a human-readable status message.
 	// +optional
@@ -204,6 +215,9 @@ type KindStatus struct {
 	// ExpirationTimestamp indicates when the cluster is scheduled to be terminated, based on TerminationPolicy.
 	// +optional
 	ExpirationTimestamp *metav1.Time `json:"expirationTimestamp,omitempty"`
+
+	// ProvisionId is the id of the backend used by the Kind provisioning tool.
+	ProvisionId *string `json:"provisionId,omitempty"`
 }
 
 // +kubebuilder:object:root=true
