@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- kind_spot.yaml
+- secret.yaml
+- openshift_spot.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

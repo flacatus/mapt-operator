@@ -1,0 +1,25 @@
+apiVersion: mapt.redhat.com/v1alpha1
+kind: Openshift
+metadata:
+  name: ocp-sample
+  namespace: mapt-operator-system
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: mapt-operator
+spec:
+  machineConfig:
+    architecture: x86_64
+    cpus: 32
+    memoryGiB: 128
+    nestedVirtualizationEnabled: false
+    spotPriceIncreasePercentage: 30
+    tags:
+      environment: dev
+      team: platform
+      user: flacatus
+      email: flacatus@redhat.com
+    useSpotInstances: true
+  openshiftClusterConfig:
+    openshiftVersion: ''
+  terminationPolicy:
+    deleteAfterSeconds: 86400

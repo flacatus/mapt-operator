@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: mapt-operator
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      app.kubernetes.io/name: mapt-operator
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        control-plane: controller-manager
+        app.kubernetes.io/name: mapt-operator
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: manager
+          image: quay.io/flacatus/mapt-operator:v0.1.0
+          imagePullPolicy: Always
+          command:
+            - /usr/local/bin/manager
+          args:
+            - --leader-elect
+            - --health-probe-bind-address=:8081
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - "ALL"
+          env:
+            - name: AWS_DEFAULT_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: mapt-operator-mapt-kind-secret
+                  key: region
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mapt-operator-mapt-kind-secret
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mapt-operator-mapt-kind-secret
+                  key: secret-key
+
+            - name: OPENSHIFT_PULL_SECRET_FILE
+              value: '/opt/cluster-info/pull-secret.json'
+            - name: PULUMI_CONFIG_PASSPHRASE
+              value: 'pulumi'
+            - name: PULUMI_HOME
+              value: /opt/cluster-info
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: "4"
+              memory: "6Gi"
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: pulumi-home
+              mountPath: /opt/cluster-info
+            - name: pulumi-home
+              mountPath: /tmp/results
+            - name: pull-secret
+              mountPath: /opt/cluster-info/pull-secret.json
+              subPath: pull-secret.json
+      volumes:
+        - name: pulumi-home
+          emptyDir: {}
+        - name: pulumi-results
+          emptyDir: {}
+        - name: pull-secret
+          secret:
+            secretName: mapt-operator-mapt-kind-secret
+            items:
+              - key: pull-secret.json
+                path: pull-secret.json
+      serviceAccountName: controller-manager
+      terminationGracePeriodSeconds: 10

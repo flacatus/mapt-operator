@@ -1,0 +1,29 @@
+---
+apiVersion: mapt.redhat.com/v1alpha1
+kind: Kind
+metadata:
+  name: kind-fla9
+  labels:
+    app.kubernetes.io/name: mapt-operator
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  cloudConfig:
+    provider: AWS
+    credentialsSecretRef:
+      name: aws-creds-secret
+
+  machineConfig:
+    architecture: x86_64
+    gpu: true
+    spotPriceIncreasePercentage: 45
+    tags:
+      env: local
+      owner: Flavius Lacatusu
+      email: flacatus@redhat.com
+
+  kindClusterConfig:
+    kubernetesVersion: v1.32
+
+  outputKubeconfigSecretName: kind-devcluster1-kubeconfig
+  terminationPolicy:
+    deleteAfterSeconds: 86400

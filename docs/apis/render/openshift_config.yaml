@@ -1,0 +1,8 @@
+processor:
+  ignoreTypes:
+    - "Kind$"
+    - "KindList$"
+    - "KindStatus$"
+    - "KindSpec$"
+    - "KindClusterConfig$"
+    - "KindSncPhase$"

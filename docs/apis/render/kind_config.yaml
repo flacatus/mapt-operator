@@ -1,0 +1,8 @@
+processor:
+  ignoreTypes:
+    - "Openshift$"
+    - "OpenshiftList$"
+    - "OpenshiftStatus$"
+    - "OpenshiftSpec$"
+    - "OpenshiftClusterConfig$"
+    - "OpenshiftSncPhase$"

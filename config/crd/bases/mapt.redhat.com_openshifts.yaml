@@ -1,0 +1,300 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: openshifts.mapt.redhat.com
+spec:
+  group: mapt.redhat.com
+  names:
+    kind: Openshift
+    listKind: OpenshiftList
+    plural: openshifts
+    singular: openshift
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Cluster phase
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    - description: Openshift version
+      jsonPath: .status.openshiftVersion
+      name: Version
+      type: string
+    - description: Is the cluster ready?
+      jsonPath: .status.clusterReady
+      name: Ready
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Openshift is the Schema for the openshifts API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: OpenshiftSpec defines the desired state of Openshift.
+            properties:
+              machineConfig:
+                description: |-
+                  MachineConfig defines the configuration for the EC2 spot machine.
+                  This includes the instance type, AMI, and other machine-level configurations.
+                  This configuration is used to provision the underlying infrastructure for the Openshift cluster.
+                properties:
+                  architecture:
+                    default: x86_64
+                    description: Architecture for the EC2 instance.
+                    enum:
+                    - x86_64
+                    - arm64
+                    type: string
+                  cpus:
+                    description: CPUs is the number of vCPUs for the EC2 instance.
+                    format: int32
+                    type: integer
+                  gpu:
+                    default: false
+                    description: |-
+                      Indicates if the EC2 instance should have GPU support.
+                      In case GPU is true, the instance type will be selected from the list of supported GPU instances.
+                    type: boolean
+                  memoryGiB:
+                    description: MemoryGiB is the amount of RAM for the EC2 instance
+                      in GiB.
+                    format: int32
+                    type: integer
+                  nestedVirtualizationEnabled:
+                    default: false
+                    description: NestedVirtualizationEnabled specifies if the EC2
+                      instance should have nested virtualization support.
+                    type: boolean
+                  spotPriceIncreasePercentage:
+                    description: |-
+                      SpotPriceIncreasePercentage is the percentage to add on top of the current calculated spot price
+                      to increase the chances of acquiring the machine. Only applies if UseSpotInstances is true.
+                      A nil value means the underlying provisioning tool's default (if any) will be used, or the relevant command-line flag will be omitted. '0' is a valid percentage.
+                      Corresponds to the Tekton 'spot-increase-rate' param (default '20').
+                    type: integer
+                  tags:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      Tags to apply to the AWS resources created by the provisioning tool.
+                      The operator will convert this map into the string format the tool expects (e.g., "key1=value1,key2=value2").
+                      Corresponds to the Tekton 'tags' param.
+                    type: object
+                  useSpotInstances:
+                    default: true
+                    description: |-
+                      UseSpotInstances specifies whether to use EC2 spot instances.
+                      Corresponds to the Tekton 'spot' param.
+                    type: boolean
+                type: object
+              openshiftClusterConfig:
+                description: |-
+                  OpenshiftClusterConfig defines the configuration for the Openshift cluster itself.
+                  This includes the version of Openshift to install, networking settings, and other cluster-level configurations.
+                properties:
+                  openshiftVersion:
+                    description: |-
+                      OpenshiftVersion specifies the version of Openshift to install.
+                      This field is required to ensure that the correct version of Openshift is deployed.
+                      It allows users to specify the desired version of Openshift for their cluster.
+                    type: string
+                required:
+                - openshiftVersion
+                type: object
+              terminationPolicy:
+                description: TerminationPolicy defines the policy for terminating
+                  the Openshift cluster.
+                properties:
+                  deleteAfterSeconds:
+                    description: |-
+                      DeleteAfterSeconds specifies a Time-To-Live (TTL) for the provisioned KindSpot.
+                      After this duration (in seconds, starting from when the cluster becomes Ready or from creation),
+                      the KindSpot and its underlying resources will be automatically destroyed.
+                      This corresponds to the provisioning tool's '--timeout' parameter, which often expects a Go duration string.
+                      The operator will convert these seconds into the required Go duration format for the tool.
+                    format: int64
+                    minimum: 60
+                    type: integer
+                type: object
+            required:
+            - machineConfig
+            - openshiftClusterConfig
+            - terminationPolicy
+            type: object
+          status:
+            description: |-
+              OpenshiftStatus defines the observed state of Openshift.
+              OpenshiftStatus provides information about the current state of the Openshift cluster.
+              It includes details such as the current phase of the cluster, conditions, and other relevant status information.
+              This status is updated by the controller to reflect the latest state of the Openshift cluster.
+              It is used to communicate the lifecycle status of the cluster to users and other components in the system.
+              The status includes fields for phase, message, conditions, observed generation, and other relevant information
+            properties:
+              averagePrice:
+                description: |-
+                  This field is used to provide information about the cost of the spot instances used
+                  for the Openshift cluster. It can help users understand the financial implications of
+                  using spot instances for their cluster.
+                type: string
+              awsInstanceID:
+                description: |-
+                  AWSInstanceID is the ID of the EC2 instance provisioned with a Kind Cluster.
+                  This field is used to track the specific instance that is running the Kind cluster.
+                  It is particularly useful for managing the lifecycle of the cluster and for debugging purposes.
+                type: string
+              clusterReady:
+                description: |-
+                  ClusterReady indicates if the Kind cluster is fully provisioned and accessible.
+                  This field is used to determine if the cluster is ready for use, meaning that all
+                type: boolean
+              conditions:
+                description: |-
+                  Conditions are used to provide detailed information about the state of the cluster,
+                  including whether it is ready, if there are any issues, and other relevant status information
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              expirationTimestamp:
+                description: |-
+                  ExpirationTimestamp indicates when the cluster is scheduled to be terminated, based on TerminationPolicy.
+                  This field is used to specify when the Openshift cluster is expected to be terminated.
+                format: date-time
+                type: string
+              kubeconfigSecretName:
+                description: |-
+                  KubeconfigSecretName is the name of the Kubernetes Secret where the cluster's
+                  kubeconfig has been stored. This field is used to reference the secret that contains
+                  the kubeconfig file for accessing the Openshift cluster.
+                type: string
+              lastUpdateTime:
+                description: |-
+                  LastUpdateTime records the last time the status was updated.
+                  This field is used to track when the status of the Openshift cluster was last modified.
+                  It helps ensure that users and other components can see the most recent status of the cluster.
+                  This is particularly useful for monitoring and debugging purposes.
+                format: date-time
+                type: string
+              message:
+                description: |-
+                  Message provides a human-readable status message.
+                  This field is used to convey additional information about the current state of the cluster,
+                  such as errors, warnings, or important updates.
+                  It can be used to provide context about the cluster's status, such as whether it
+                  is currently being provisioned, if there are any issues, or if it is ready for use.
+                type: string
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the .metadata.generation that was last processed by the controller.
+                  This field is used to track the version of the resource that the controller has observed.
+                  It helps ensure that the controller is working with the most recent version of the resource
+                  and can be used to detect changes in the resource that may require action.
+                format: int64
+                type: integer
+              phase:
+                description: |-
+                  Phase indicates the current lifecycle phase of the Kind cluster.
+                  This field is used to track the progress of the cluster through its lifecycle stages.
+                  Possible values include:
+                  - Pending: The cluster is being created.
+                  - Provisioning: The cluster is being provisioned, including setting up the infrastructure and
+                    installing the necessary components.
+                  - Running: The cluster is fully operational and ready for use
+                  E.g., Pending, Provisioning, Ready, Deleting, Error.
+                enum:
+                - Pending
+                - Provisioning
+                - Running
+                - Failed
+                - Deleting
+                type: string
+              provisionId:
+                description: This field is used to track the specific provisioning
+                  session for the Openshift cluster.
+                type: string
+              provisionStartTime:
+                description: |-
+                  ProvisionStartTime records when the provisioning process began.
+                  This field is used to track the start time of the provisioning process for the Openshift cluster.
+                format: date-time
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
